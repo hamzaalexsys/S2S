@@ -46,6 +46,15 @@ class SessionManager:
         if len(self.state.conversation_memory) > 20:
             self.state.conversation_memory = self.state.conversation_memory[-20:]
     
+    def add_message(self, message: dict):
+        """Add a complete message object to chat history"""
+        self.state.chat_history.append(message)
+        
+        # Also add to conversation memory (keep last 20 messages)
+        self.state.conversation_memory.append(message)
+        if len(self.state.conversation_memory) > 20:
+            self.state.conversation_memory = self.state.conversation_memory[-20:]
+    
     def clear_conversation(self):
         """Clear conversation history"""
         self.state.chat_history = []

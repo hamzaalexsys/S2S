@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List, Optional, Any
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 import streamlit as st
 
@@ -25,7 +25,7 @@ class KnowledgeBase:
                 return None
         return self.embeddings
     
-    def create_from_texts(self, texts: List[str]) -> Optional:
+    def create_from_texts(self, texts: List[str]) -> Optional[Any]:
         """Create FAISS knowledge base from texts"""
         try:
             embeddings = self._get_embeddings()
