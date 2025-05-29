@@ -124,6 +124,114 @@ def _render_voice_settings(session_manager):
     session_manager.set('enable_speech_input', enable_speech_input)
     session_manager.set('enable_speech_output', enable_speech_output)
     
+    # Add TTS test section
+    if enable_speech_output:
+        st.markdown("---")
+        st.write("**🧪 Test Text-to-Speech:**")
+        
+        # Browser audio test first
+        st.write("**🔊 Browser Audio Test:**")
+        if st.button("🎵 Test Browser Audio", key="test_browser_audio"):
+            # Create a simple beep sound for testing
+            import numpy as np
+            import io
+            import wave
+            
+            # Generate a simple sine wave beep
+            sample_rate = 44100
+            duration = 1.0  # 1 second
+            frequency = 440  # A4 note
+            
+            t = np.linspace(0, duration, int(sample_rate * duration), False)
+            wave_data = np.sin(2 * np.pi * frequency * t) * 0.3
+            
+            # Convert to 16-bit integers
+            wave_data = (wave_data * 32767).astype(np.int16)
+            
+            # Create WAV file in memory
+            wav_buffer = io.BytesIO()
+            with wave.open(wav_buffer, 'wb') as wav_file:
+                wav_file.setnchannels(1)  # Mono
+                wav_file.setsampwidth(2)  # 2 bytes per sample
+                wav_file.setframerate(sample_rate)
+                wav_file.writeframes(wave_data.tobytes())
+            
+            wav_buffer.seek(0)
+            audio_bytes = wav_buffer.read()
+            
+            st.success("✅ Browser audio test - You should hear a beep!")
+            st.audio(audio_bytes, format='audio/wav', autoplay=True)
+            
+            # Also provide HTML5 audio
+            import base64
+            audio_base64 = base64.b64encode(audio_bytes).decode()
+            audio_html = f"""
+            <audio controls autoplay style="width: 100%;">
+                <source src="data:audio/wav;base64,{audio_base64}" type="audio/wav">
+                Your browser does not support the audio element.
+            </audio>
+            """
+            st.markdown("**HTML5 Audio Player:**", unsafe_allow_html=True)
+            st.markdown(audio_html, unsafe_allow_html=True)
+            
+            st.info("If you don't hear the beep, check your browser's audio settings, volume, and ensure audio is not muted.")
+        
+        st.markdown("---")
+        
+        test_text = st.text_input(
+            "Test text:", 
+            value="Hello, this is a test of the text to speech system.",
+            key="tts_test_input"
+        )
+        
+        if st.button("🎵 Test TTS", key="test_tts_button"):
+            if test_text.strip():
+                tts_engine = session_manager.get('tts_engine')
+                if tts_engine:
+                    with st.spinner("Generating test audio..."):
+                        # Import here to avoid circular imports
+                        from models.tts_model import TTSModel
+                        from config.settings import AppConfig
+                        
+                        config = AppConfig()
+                        tts_model = TTSModel(config.tts)
+                        
+                        audio_file = tts_model.generate_audio(test_text, tts_engine)
+                        if audio_file:
+                            try:
+                                with open(audio_file, 'rb') as f:
+                                    audio_bytes = f.read()
+                                
+                                st.success("✅ Test audio generated!")
+                                st.audio(audio_bytes, format='audio/wav', autoplay=True)
+                                
+                                # Also provide HTML5 audio player
+                                import base64
+                                audio_base64 = base64.b64encode(audio_bytes).decode()
+                                audio_html = f"""
+                                <audio controls autoplay style="width: 100%;">
+                                    <source src="data:audio/wav;base64,{audio_base64}" type="audio/wav">
+                                    Your browser does not support the audio element.
+                                </audio>
+                                """
+                                st.markdown(audio_html, unsafe_allow_html=True)
+                                
+                                # Clean up test file
+                                import os
+                                try:
+                                    os.unlink(audio_file)
+                                except:
+                                    pass
+                                    
+                            except Exception as e:
+                                st.error(f"Error playing test audio: {str(e)}")
+                        else:
+                            st.error("Failed to generate test audio")
+                else:
+                    st.error("TTS engine not initialized")
+            else:
+                st.warning("Please enter some text to test")
+    
     return {
         'enable_speech_input': enable_speech_input,
         'enable_speech_output': enable_speech_output

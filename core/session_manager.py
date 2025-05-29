@@ -1,5 +1,4 @@
 import streamlit as st
-from langchain.memory import ConversationBufferMemory
 from typing import Dict, List, Any
 
 class SessionManager:
@@ -10,7 +9,7 @@ class SessionManager:
         """Initialize all session state variables"""
         defaults = {
             'chat_history': [],
-            'conversation_memory': None,
+            'conversation_memory': [],  # Simple list instead of LangChain memory
             'pdf_knowledge_base': None,
             'pdf_texts': [],
             'tts_engine': None,
@@ -24,13 +23,7 @@ class SessionManager:
         
         for key, value in defaults.items():
             if key not in self.state:
-                if key == 'conversation_memory':
-                    self.state[key] = ConversationBufferMemory(
-                        memory_key="chat_history",
-                        return_messages=True
-                    )
-                else:
-                    self.state[key] = value
+                self.state[key] = value
     
     def get(self, key: str, default: Any = None) -> Any:
         """Get a value from session state"""
@@ -42,18 +35,21 @@ class SessionManager:
     
     def append_message(self, role: str, content: str):
         """Append a message to chat history"""
-        self.state.chat_history.append({
+        message = {
             "role": role,
             "content": content
-        })
+        }
+        self.state.chat_history.append(message)
+        
+        # Also add to conversation memory (keep last 20 messages)
+        self.state.conversation_memory.append(message)
+        if len(self.state.conversation_memory) > 20:
+            self.state.conversation_memory = self.state.conversation_memory[-20:]
     
     def clear_conversation(self):
         """Clear conversation history"""
         self.state.chat_history = []
-        self.state.conversation_memory = ConversationBufferMemory(
-            memory_key="chat_history",
-            return_messages=True
-        )
+        self.state.conversation_memory = []
     
     def add_pdf_text(self, filename: str, text: str):
         """Add processed PDF text"""

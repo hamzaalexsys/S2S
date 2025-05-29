@@ -25,9 +25,22 @@ class LocalAIAssistant:
     
     def _init_tts_engine(self):
         """Initialize TTS engine"""
+        print("🎤 Initializing TTS engine...")
         engine = self.tts.init_engine()
         if engine:
+            print("✅ TTS engine initialized successfully")
+            
+            # Test the engine
+            if self.tts.test_audio_generation(engine):
+                print("✅ TTS engine test passed")
+            else:
+                print("⚠️ TTS engine test failed - audio may not work properly")
+            
             self.session_manager.set('tts_engine', engine)
+            return True
+        else:
+            print("❌ Failed to initialize TTS engine")
+            return False
     
     def check_ollama_status(self):
         """Check Ollama status and available models"""

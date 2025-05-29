@@ -1,13 +1,22 @@
-import streamlit as st
+#!/usr/bin/env python3
+"""
+Local AI Assistant - Main Application
+"""
 
-# Fix for PyTorch compatibility with Streamlit
-import sys
 import os
-os.environ["TOKENIZERS_PARALLELISM"] = "false"
+import sys
 
-# Suppress PyTorch warnings that can interfere with Streamlit
+# Set environment variables BEFORE any imports
+os.environ["TOKENIZERS_PARALLELISM"] = "false"
+os.environ["PYTORCH_ENABLE_MPS_FALLBACK"] = "1"
+
+# Suppress warnings before importing anything
 import warnings
-warnings.filterwarnings("ignore", category=UserWarning, module="torch")
+warnings.filterwarnings("ignore", category=DeprecationWarning)
+warnings.filterwarnings("ignore", category=UserWarning)
+warnings.filterwarnings("ignore", category=FutureWarning)
+
+import streamlit as st
 
 from core.session_manager import SessionManager
 from core.assistant import LocalAIAssistant
